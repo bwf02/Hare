@@ -16,12 +16,6 @@ Built upon the high-performance foundations of **[DeepGEMM](https://github.com/d
 * **🧩 Structured Sparsity**: Utilizes a hierarchical **Block N:M** sparse format for weights to fully exploit hardware acceleration and bridge the gap between sparsity and hardware utilization.
 * **⚡ DeepGEMM Integration**: Leveraging DeepGEMM's state-of-the-art GEMM implementation, Hare extends these capabilities to support dynamic, sparse workloads with maximum efficiency.
 
-### Performance
-
-Extensive evaluations demonstrate that Hare consistently outperforms state-of-the-art baselines:
-* **Kernel Level**: Average speedup of **6.16×** (up to 33.26×).
-* **Model Level (E2E)**: Average speedup of **1.49×** (up to 1.88×).
-
 ---
 
 ## ⚙️ Prerequisites
