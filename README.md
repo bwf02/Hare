@@ -119,7 +119,12 @@ This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE
 
 ## Acknowledgments
 
-We thank the contributors of [DeepGEMM](https://github.com/deepseek-ai/DeepGEMM), [DeepSpeed-MoE](https://github.com/microsoft/DeepSpeed), and [vLLM](https://github.com/vllm-project/vllm) for their excellent open-source work that made this project possible.
+We thank the contributors of the following open-source projects for their excellent work that made this project possible:
+
+- [DeepGEMM](https://github.com/deepseek-ai/DeepGEMM)
+- [Samoyeds](https://github.com/guqiqi/Samoyeds)
+- [DeepSpeed-MoE](https://github.com/microsoft/DeepSpeed)
+- [vLLM](https://github.com/vllm-project/vllm)
 
 
 
