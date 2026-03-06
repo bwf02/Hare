@@ -1,0 +1,2 @@
+python test_realistic.py
+python test_synthetic.py

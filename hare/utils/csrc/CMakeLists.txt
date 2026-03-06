@@ -1,0 +1,2 @@
+add_subdirectory(hare_ops)
+add_subdirectory(megablock_ops)

@@ -1,0 +1,41 @@
+Library path:
+ > ['/root/miniconda3/lib/python3.13/site-packages/deep_gemm']
+
+32768 1024
+Testing MegaSparse-SSD:
+ssd called with m=32768, n=8192, k=1024
+num_blocks=2176, num_col_blocks=68, num_row_blocks=32
+Common Params: m=32768, n=8192, k=1024, block_m=128, block_k=64, block_n=128, swizzle_a_mode=32, nnz_k=256, block_h=128, block_w=16
+Generated kernel code: 
+    #ifdef __CUDACC_RTC__
+    #include <deep_gemm/nvrtc_std.cuh>
+    #else
+    #include <cuda.h>
+    #include <string>
+    #endif
+    
+    #include <deep_gemm/impls/fastssd.cuh>
+    
+    using namespace deep_gemm;
+    
+    static void __instantiate_kernel() {
+        auto ptr = reinterpret_cast<void*>(&fastssd_impl<
+            32768, 8192, 1024,
+            32, 68,
+            8,
+            1,
+            128, 128, 64,
+            16, 128,
+            1, 2,
+            32,
+            128,
+            2, 0,
+            128, 256,
+            1, true,
+            GemmType::Normal
+        >);
+    };
+    
+Loading CUBIN: /root/.deep_gemm/cache/kernel.fastssd.5a947c002f1071a3ceb48e00dffead98/kernel.cubin
+Symbol names: _ZN9deep_gemm12fastssd_implILi32768ELi8192ELi1024ELi32ELi68ELi8ELi1ELi128ELi128ELi64ELi16ELi128ELi1ELi2ELi32ELi128ELi2ELi0ELi128ELi256ELi1ELb1ELNS_8GemmTypeE0EEEvPiS2_S2_S2_S2_PjS3_P13__nv_bfloat16S5_S5_14CUtensorMap_st, 
+Launch kernel with {84, 1} x 384, shared memory: 86032 bytes, cluster: 1, stream: 0

@@ -1,0 +1,51 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [    
+        {
+            "name": "Python",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "/root/code/fast-sparse/megasparse/sparse_warp_specialization/tests/test_core.py",
+            "console": "integratedTerminal",
+            "env": {
+                "CUDA_DEVICE_MAX_CONNECTIONS": "1",
+            },
+            "args": [
+                "--micro-batch-size", "1",
+                "--seq-length", "256",
+                "--hidden-size", "512",
+                "--ffn-hidden-size", "256",
+                "--moe-num-experts", "2"
+            ],
+            "cwd": "${workspaceFolder}/megasparse"
+        },
+        {
+            "name": "fastSparse",
+            "type": "cuda-gdb",//"type": "cuda-gdb" 不支持 "args" 的数组形式。
+            "request": "launch",
+            "program": "${workspaceFolder}/megasparse/build/fastsparse",
+            "args": "--m 256 --k 512 --n 512 --expert_ffn_size 256 --warm_iterations 0 --iterations 1",
+            "cwd": "${workspaceFolder}/megasparse"
+        },
+        {
+            "name": "Hare-MoE",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "/root/code/fast-sparse/megasparse/infer/deepseek_megasparse_breakdown.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--repo", "deepseek-ai/deepseek-moe-16b-base",
+                "--batch_size", "1", 
+                "--seq_len", "1024",
+                "--mlp",
+                "--flash",
+                "--time"
+            ],
+            "cwd": "${workspaceFolder}/megasparse"
+        },
+        
+    ]
+}

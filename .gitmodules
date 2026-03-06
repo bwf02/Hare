@@ -1,0 +1,15 @@
+[submodule "third_party/megablocks"]
+	path = third_party/megablocks
+	url = https://github.com/databricks/megablocks.git
+[submodule "third_party/Samoyeds"]
+	path = third_party/Samoyeds
+	url = git@gitee.com:bu-wf/samoyeds.git
+[submodule "sparse_warp_spec/third-party/cutlass"]
+	path = sparse_warp_spec/third-party/cutlass
+	url = https://github.com/NVIDIA/cutlass.git
+[submodule "sparse_warp_spec/third-party/fmt"]
+	path = sparse_warp_spec/third-party/fmt
+	url = https://github.com/fmtlib/fmt.git
+[submodule "third_party/venom"]
+	path = third_party/venom
+	url = git@gitee.com:bu-wf/venom.git
