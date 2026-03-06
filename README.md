@@ -1,74 +1,127 @@
+# Hare: High-Performance Sparse MoE Inference via Hierarchical Structured Sparsity and Padding-Free Execution on GPU
 
-# fast-sparse
+**Hare** is a novel and high-performance inference system designed for Mixture-of-Experts (MoE) Large Language Models (LLMs). By synergistically leveraging model sparsity and expert parallelism, Hare addresses the critical compute and memory bottlenecks inherent in scaling MoE models.
 
-This repository contains the `fast-sparse` project and related components used for building high-performance sparse GEMM (and related) kernels. The instructions below follow the original minimal steps and expand them into a full, practical workflow for cloning, preparing submodules, building native C++/CUDA components, and installing the Python extension.
+Built upon the high-performance foundations of **[DeepGEMM](https://github.com/deepseek-ai/DeepGEMM)**, Hare introduces a customized sparse kernel library optimized specifically for **NVIDIA Hopper** architectures using TMA (Tensor Memory Accelerator).
+
+### Key Features & Innovations
+
+* **Padding-Free Execution**: Hare introduces a **Residual Blocked Coordinate Format** for activations, eliminating redundant token padding and costly data-format generation typically found in MoE routing mechanisms.
+* **Structured Sparsity**: Utilizes a hierarchical **Block N:M** sparse format for weights to fully exploit hardware acceleration and bridge the gap between sparsity and hardware utilization.
+* **DeepGEMM Integration**: Leveraging DeepGEMM's state-of-the-art GEMM implementation, Hare extends these capabilities to support dynamic, sparse workloads with maximum efficiency.
+
+---
 
 ## Prerequisites
 
-- Linux (Ubuntu recommended)
-- Python 3.8+ (3.10 used in CI/dev container)
-- CUDA toolkit (matching the installed GPU drivers)
-- NVCC in `CUDA_HOME` (e.g. `/usr/local/cuda`)
-- PyTorch with CUDA support (libtorch or `torch` Python package)
-- CMake (>= 3.10)
-- `git`, `make`, `gcc`/`g++`
-- `python3-dev` / Python headers for building extensions
+**Hardware Requirements**
+> **Strict Requirement**: Hare relies on **TMA (Tensor Memory Accelerator)** features.
+* **GPU**: NVIDIA Hopper Architecture or newer (e.g., **H100**, **5090**, **PRO 6000**).
+* **VRAM**: Sufficient memory to load the target MoE model size.
 
-Optional but recommended:
-- `pip` and a virtualenv or conda environment
-- `pybind11` if building via CMake (the `setup.py` build flow will handle Python extension building via `torch.utils.cpp_extension`)
+**Software Requirements**
+* **OS**: Linux (Ubuntu 20.04/22.04 recommended)
+* **CUDA Toolkit**: **Version 12.8** or higher (Required for latest TMA/Hopper APIs).
+* **Compiler**: CMake >= 3.20, GCC >= 9.0
+* **Python**: Version 3.10
 
-## Quick start (recommended)
+---
 
-These commands reproduce the original short steps and provide the typical flow used during development.
+## Project Structure
 
-1. Clone the repository (with submodules):
-
-```bash
-git clone -b fp16 git@gitee.com:bu-wf/fast-sparse.git --recursive
-cd fast-sparse
-git submodule update --remote --recursive
-git submodule update --init --recursive
+```
+Hare/
+├── sparse_warp_spec/     # Custom sparse kernel library (DeepGEMM-based)
+│   ├── csrc/            # CUDA C++ source code for JIT kernels
+│   ├── sparse_gemm/     # Sparse GEMM operations and utilities
+│   └── tests/           # Kernel unit tests
+├── hare/                # End-to-end MoE inference system
+│   ├── model/           # MoE layer implementations (DeepSeek, Mixtral, Qwen)
+│   ├── infer/           # Inference code and benchmarks
+│   └── utils/           # Utility functions and sparsification tools
+├── benchmark/           # Performance evaluation scripts
+│   ├── kernel/          # Micro-benchmarks for sparse kernels
+│   ├── model/           # End-to-end model benchmarks
+│   └── plot/            # Visualization scripts for results
+└── profiling/           # Profiling data
 ```
 
-2. Run the top-level build script (this is project-specific and may perform project-wide preparation):
+---
+
+## Installation
+
+Follow these steps to set up the environment and build the custom kernels.
+
+### 1. Clone the Repository
 
 ```bash
+git clone --recursive https://github.com/bwf02/Hare.git
+cd fast-sparse
+```
+
+### 2. Environment Setup & Compilation
+
+```bash
+# Create and activate conda environment
+conda create -n hare python=3.10 -y
+conda activate hare
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Compile custom kernels
 ./build.sh
 ```
 
-3. Build and install the `sparse_warp_specialization` component (Py extension and helper libs):
+**Note:** The build process requires CUDA 12.8+ and CMake 3.20+. Ensure your `LIBTORCH` environment variable is set correctly if using a custom PyTorch installation.
+
+---
+
+## Benchmarks & Reproduction
+
+Follow these steps to reproduce the experimental results and figures presented in the paper.
+
+### Reproduce Figure 11 (Real-World Matrix Shapes)
 
 ```bash
-cd sparse_warp_spec
-./install.sh
+cd benchmark/
+python kernel/test_realistic.py
+# Generate Figure 11
+python plot/plot_realistic.py
 ```
 
-The `install.sh` script in that folder typically calls `python setup.py build` and creates a `.so` / Python extension that is symlinked into the current directory. If you need an editable install, run `pip install -e .` from that folder instead.
+### Reproduce Figure 12 (Synthetic Matrix Shapes)
 
-4. Run Hare MoE
 ```bash
-python benchmark/deepseek_hare.py --time --batch_size 1 --layer --flash --experts 8 --intermediate_size 2048
-# multi-gpu
-torchrun --nproc_per_node 2 benchmark/deepseek_hare.py --time --batch_size 1 --layer --flash --experts 8 --intermediate_size 2048
+python kernel/test_synthetic.py
+# Generate Figure 12
+python plot/plot_synthetic_vary.py
 ```
 
+### Reproduce End-to-End MoE Results
 
-5. venom
 ```bash
-# cusparseLt
-./src/benchmark_spmm --sparsity-type csr --spmm cuSparseLt --gemm cuBlas --precision half --m 1024 --k 4096 --n 768 --d 0.5 --check
-# CLASP
-./src/benchmark_spmm --sparsity-type cvs --spmm CLASP --gemm cuBlas --precision half --block-size 2 --m 1024 --k 256 --n 256 --d 0.2 --check
-# Spuntik 
-./src/benchmark_spmm --sparsity-type csr --spmm sputnik --gemm cuBlas --precision half --acc_t fp16 --m 256 --k 256 --n 256 --d 0.1 
-# Spatha 
-./src/benchmark_spmm --sparsity-type n-to-m --spmm spatha --gemm cuBlas --precision half --meta-block-size 32 --block-size 4 --nn_row 2 --mm_row 8 --m 1024 --k 4096 --n 4096 --d 0.5 --bm 128 --bn 64 --bk 32 --wm 32 --wn 64 --wk 32 --mm 16 --mn 8 --mk 32 --nstage 2 --random --check
+# Run end-to-end benchmarks
+bash model/script.sh
+
+# Generate performance plots
+python plot/plot_prefill_model.py
+python plot/plot_decode_model.py
 ```
 
-6. SSMM
-```bash
-./build/./benchmark/./horizontal_ssmm_benchmark -m 1024 -k 4096 -n 4096 --vector_length 128 --seed 42 -t
-```
+---
 
-## run kernel benchmark
+## License
+
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## Acknowledgments
+
+We thank the contributors of [DeepGEMM](https://github.com/deepseek-ai/DeepGEMM), [DeepSpeed-MoE](https://github.com/microsoft/DeepSpeed), and [vLLM](https://github.com/vllm-project/vllm) for their excellent open-source work that made this project possible.
+
+
+
+
+
